@@ -1,3 +1,26 @@
+Perfect. Let's add that now. ♟️
+
+ We're going to make **one bigger update** rather than constantly replacing little pieces. This version adds the foundation for **player names + Elo**, while keeping your three rosters working exactly as they are.
+
+ ### What you'll get
+
+ - Add a player with **Name + Elo**
+- Edit **Name + Elo**
+- Remove players
+- Elo is displayed in the roster
+- Dummy 1 has test Elo ratings
+- Player data stays separate between rosters
+- Existing roster data is preserved as much as possible
+
+ ### Step 1
+
+ Go to:
+
+ **GitHub → your repository → `index.html` → ✏️ Edit**
+
+ Delete the current contents and replace them with the code below.
+
+```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,8 +40,6 @@ body {
     background: #f3f4f6;
     color: #1f2937;
 }
-
-/* LOGIN */
 
 #login-screen {
     min-height: 100vh;
@@ -80,8 +101,6 @@ button:hover {
     margin-top: 10px;
 }
 
-/* SITE */
-
 #site {
     display: none;
     min-height: 100vh;
@@ -102,7 +121,6 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
 }
 
 .brand {
@@ -166,8 +184,6 @@ main {
     color: #6b7280;
 }
 
-/* CARDS */
-
 .card {
     background: white;
     border: 1px solid #d1d5db;
@@ -179,8 +195,6 @@ main {
 .card h3 {
     margin-top: 0;
 }
-
-/* ROSTER SELECTOR */
 
 .roster-selector {
     display: grid;
@@ -207,20 +221,18 @@ main {
     color: #1d4ed8;
 }
 
-.roster-button .roster-name {
+.roster-name {
     display: block;
     font-size: 17px;
     font-weight: bold;
 }
 
-.roster-button .player-count {
+.player-count {
     display: block;
     margin-top: 5px;
     color: #6b7280;
     font-size: 13px;
 }
-
-/* TABLES */
 
 .table-container {
     background: white;
@@ -250,16 +262,14 @@ tr:last-child td {
     border-bottom: none;
 }
 
-/* PLAYER MANAGEMENT */
-
-.add-player {
-    display: flex;
+.add-player-form {
+    display: grid;
+    grid-template-columns: 1fr 180px auto;
     gap: 10px;
 }
 
-.add-player input {
+.add-player-form input {
     margin: 0;
-    flex: 1;
 }
 
 .player-actions {
@@ -286,41 +296,30 @@ tr:last-child td {
     color: #6b7280;
 }
 
-/* MOBILE */
-
 @media (max-width: 700px) {
-
-    .top-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    nav {
-        width: 100%;
-    }
-
-    nav button {
-        flex: 1;
-    }
 
     .roster-selector {
         grid-template-columns: 1fr;
     }
 
-    .add-player {
-        flex-direction: column;
+    .add-player-form {
+        grid-template-columns: 1fr;
     }
 
-    .player-actions {
+    .top-row {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    nav button {
+        flex: 1;
     }
 }
 </style>
 </head>
 
 <body>
-
-<!-- LOGIN -->
 
 <section id="login-screen">
 
@@ -330,9 +329,7 @@ tr:last-child td {
 
         <h1>Chess Club</h1>
 
-        <p>
-            Enter the admin password to continue.
-        </p>
+        <p>Enter the admin password to continue.</p>
 
         <input
             type="password"
@@ -340,18 +337,13 @@ tr:last-child td {
             placeholder="Password"
         >
 
-        <button onclick="login()">
-            Enter
-        </button>
+        <button onclick="login()">Enter</button>
 
         <div id="login-error" class="error"></div>
 
     </div>
 
 </section>
-
-
-<!-- MAIN SITE -->
 
 <div id="site">
 
@@ -367,7 +359,6 @@ tr:last-child td {
 
     </div>
 
-
     <div class="active-roster">
 
         Active roster:
@@ -376,7 +367,6 @@ tr:last-child td {
         </strong>
 
     </div>
-
 
     <nav>
 
@@ -411,11 +401,7 @@ tr:last-child td {
 
 </header>
 
-
 <main>
-
-
-<!-- HOME -->
 
 <section id="home" class="page active">
 
@@ -429,7 +415,6 @@ tr:last-child td {
 
     </div>
 
-
     <div class="card">
 
         <h3>Select Roster</h3>
@@ -440,7 +425,6 @@ tr:last-child td {
         ></div>
 
     </div>
-
 
     <div class="table-container">
 
@@ -460,12 +444,8 @@ tr:last-child td {
 
                 <tr>
 
-                    <td
-                        colspan="3"
-                        class="empty-state"
-                    >
+                    <td colspan="3" class="empty-state">
                         No pairings have been created yet.
-
                     </td>
 
                 </tr>
@@ -477,9 +457,6 @@ tr:last-child td {
     </div>
 
 </section>
-
-
-<!-- UPDATES -->
 
 <section id="updates" class="page">
 
@@ -496,20 +473,26 @@ tr:last-child td {
 
     </div>
 
-
     <div class="card">
 
-        <h3>Player Management</h3>
+        <h3>Add Player</h3>
 
         <p>
-            Add players to the active roster.
+            Add a player and their current Elo rating.
         </p>
 
-        <div class="add-player">
+        <div class="add-player-form">
 
             <input
                 id="new-player-name"
-                placeholder="Enter player name"
+                placeholder="Player name"
+            >
+
+            <input
+                id="new-player-elo"
+                type="number"
+                placeholder="Elo"
+                min="0"
             >
 
             <button onclick="addPlayer()">
@@ -520,7 +503,6 @@ tr:last-child td {
 
     </div>
 
-
     <div class="table-container">
 
         <table>
@@ -529,12 +511,16 @@ tr:last-child td {
 
                 <tr>
 
-                    <th style="width:80px;">
+                    <th style="width:70px;">
                         #
                     </th>
 
                     <th>
                         Player
+                    </th>
+
+                    <th style="width:120px;">
+                        Elo
                     </th>
 
                     <th style="width:180px;">
@@ -553,27 +539,20 @@ tr:last-child td {
 
 </section>
 
-
-<!-- ROSTERS -->
-
 <section id="rosters" class="page">
 
     <div class="page-title">
 
         <h2>Rosters</h2>
 
-        <p>
-            Select which roster you want to manage.
-        </p>
+        <p>Select which roster you want to manage.</p>
 
     </div>
-
 
     <div
         id="roster-selector"
         class="roster-selector"
     ></div>
-
 
     <div class="card">
 
@@ -588,9 +567,6 @@ tr:last-child td {
     </div>
 
 </section>
-
-
-<!-- HISTORY -->
 
 <section id="history" class="page">
 
@@ -607,39 +583,32 @@ tr:last-child td {
 
     </div>
 
-
     <div class="card">
 
         <div class="empty-state">
-
             No rounds have been recorded yet.
-
         </div>
 
     </div>
 
 </section>
 
-
 </main>
 
 </div>
 
-
 <script>
 
-/*
-====================================================
-PASSWORD
-====================================================
-*/
-
-const ADMIN_PASSWORD = "BISHOP1945";
-
+const ADMIN_PASSWORD = "CHANGE_ME";
 
 /*
 ====================================================
-ROSTER DATA
+DEFAULT ROSTERS
+
+Each player now has:
+- id
+- name
+- elo
 ====================================================
 */
 
@@ -648,14 +617,55 @@ const defaultData = {
     "Dummy 1": {
 
         players: [
-            "Alex",
-            "Jordan",
-            "Sarah",
-            "Michael",
-            "Emma",
-            "David",
-            "Noah",
-            "Liam"
+
+            {
+                id: "dummy-1",
+                name: "Alex",
+                elo: 1500
+            },
+
+            {
+                id: "dummy-2",
+                name: "Jordan",
+                elo: 1450
+            },
+
+            {
+                id: "dummy-3",
+                name: "Sarah",
+                elo: 1400
+            },
+
+            {
+                id: "dummy-4",
+                name: "Michael",
+                elo: 1350
+            },
+
+            {
+                id: "dummy-5",
+                name: "Emma",
+                elo: 1300
+            },
+
+            {
+                id: "dummy-6",
+                name: "David",
+                elo: 1250
+            },
+
+            {
+                id: "dummy-7",
+                name: "Noah",
+                elo: 1200
+            },
+
+            {
+                id: "dummy-8",
+                name: "Liam",
+                elo: 1150
+            }
+
         ],
 
         pairings: [],
@@ -663,7 +673,6 @@ const defaultData = {
         history: []
 
     },
-
 
     "Roster 1": {
 
@@ -674,7 +683,6 @@ const defaultData = {
         history: []
 
     },
-
 
     "Roster 2": {
 
@@ -688,10 +696,12 @@ const defaultData = {
 
 };
 
-
 /*
 ====================================================
-LOAD / SAVE DATA
+LOAD DATA
+
+This also upgrades the old player format
+if you already had names saved.
 ====================================================
 */
 
@@ -700,11 +710,45 @@ let rosterData =
         localStorage.getItem("chessClubData")
     ) || defaultData;
 
-
 let activeRoster =
-    localStorage.getItem("activeRoster") ||
-    "Dummy 1";
+    localStorage.getItem("activeRoster")
+    || "Dummy 1";
 
+/*
+Upgrade old player data
+*/
+
+Object.keys(rosterData).forEach(rosterName => {
+
+    rosterData[rosterName].players =
+        rosterData[rosterName].players.map(
+            (player, index) => {
+
+                if (typeof player === "string") {
+
+                    return {
+
+                        id:
+                            rosterName
+                            + "-"
+                            + index
+                            + "-"
+                            + Date.now(),
+
+                        name: player,
+
+                        elo: 1200
+
+                    };
+
+                }
+
+                return player;
+
+            }
+        );
+
+});
 
 function saveData() {
 
@@ -720,7 +764,6 @@ function saveData() {
 
 }
 
-
 /*
 ====================================================
 LOGIN
@@ -734,7 +777,6 @@ function login() {
 
     const error =
         document.getElementById("login-error");
-
 
     if (password === ADMIN_PASSWORD) {
 
@@ -757,7 +799,6 @@ function login() {
 
 }
 
-
 /*
 ====================================================
 NAVIGATION
@@ -774,11 +815,9 @@ function showPage(pageId, button) {
 
         });
 
-
     document
         .getElementById(pageId)
         .classList.add("active");
-
 
     document
         .querySelectorAll("nav button")
@@ -788,13 +827,11 @@ function showPage(pageId, button) {
 
         });
 
-
     button.classList.add("active");
 
     updateEverything();
 
 }
-
 
 /*
 ====================================================
@@ -812,10 +849,9 @@ function selectRoster(name) {
 
 }
 
-
 /*
 ====================================================
-ROSTER SELECTOR
+ROSTER SELECTORS
 ====================================================
 */
 
@@ -833,11 +869,9 @@ function renderRosterSelectors() {
 
     ];
 
-
     containers.forEach(container => {
 
         container.innerHTML = "";
-
 
         Object.keys(rosterData)
             .forEach(name => {
@@ -848,7 +882,6 @@ function renderRosterSelectors() {
                 button.className =
                     "roster-button";
 
-
                 if (name === activeRoster) {
 
                     button.classList.add(
@@ -856,7 +889,6 @@ function renderRosterSelectors() {
                     );
 
                 }
-
 
                 button.innerHTML = `
 
@@ -871,13 +903,11 @@ function renderRosterSelectors() {
 
                 `;
 
-
                 button.onclick = function() {
 
                     selectRoster(name);
 
                 };
-
 
                 container.appendChild(button);
 
@@ -886,7 +916,6 @@ function renderRosterSelectors() {
     });
 
 }
-
 
 /*
 ====================================================
@@ -901,13 +930,10 @@ function renderPlayers() {
             "players-body"
         );
 
-
     body.innerHTML = "";
-
 
     const players =
         rosterData[activeRoster].players;
-
 
     if (players.length === 0) {
 
@@ -916,7 +942,7 @@ function renderPlayers() {
             <tr>
 
                 <td
-                    colspan="3"
+                    colspan="4"
                     class="empty-state"
                 >
                     No players have been added yet.
@@ -931,18 +957,24 @@ function renderPlayers() {
 
     }
 
-
     players.forEach((player, index) => {
 
         const row =
             document.createElement("tr");
 
-
         row.innerHTML = `
 
-            <td>${index + 1}</td>
+            <td>
+                ${index + 1}
+            </td>
 
-            <td>${player}</td>
+            <td>
+                ${escapeHtml(player.name)}
+            </td>
+
+            <td>
+                ${player.elo}
+            </td>
 
             <td>
 
@@ -968,13 +1000,11 @@ function renderPlayers() {
 
         `;
 
-
         body.appendChild(row);
 
     });
 
 }
-
 
 /*
 ====================================================
@@ -984,15 +1014,21 @@ ADD PLAYER
 
 function addPlayer() {
 
-    const input =
+    const nameInput =
         document.getElementById(
             "new-player-name"
         );
 
+    const eloInput =
+        document.getElementById(
+            "new-player-elo"
+        );
 
     const name =
-        input.value.trim();
+        nameInput.value.trim();
 
+    const elo =
+        Number(eloInput.value);
 
     if (!name) {
 
@@ -1002,14 +1038,36 @@ function addPlayer() {
 
     }
 
+    if (!elo || elo < 0) {
+
+        alert("Please enter a valid Elo rating.");
+
+        return;
+
+    }
 
     rosterData[activeRoster]
         .players
-        .push(name);
+        .push({
 
+            id:
+                activeRoster
+                + "-"
+                + Date.now()
+                + "-"
+                + Math.random()
+                    .toString(36)
+                    .substring(2),
 
-    input.value = "";
+            name: name,
 
+            elo: elo
+
+        });
+
+    nameInput.value = "";
+
+    eloInput.value = "";
 
     saveData();
 
@@ -1017,45 +1075,69 @@ function addPlayer() {
 
 }
 
-
 /*
 ====================================================
 EDIT PLAYER
+
+Name AND Elo can be changed.
 ====================================================
 */
 
 function editPlayer(index) {
 
-    const oldName =
+    const player =
         rosterData[activeRoster]
             .players[index];
 
-
     const newName =
         prompt(
-            "Enter the new player name:",
-            oldName
+            "Player name:",
+            player.name
         );
 
-
     if (
-        newName !== null &&
-        newName.trim() !== ""
+        newName === null ||
+        newName.trim() === ""
     ) {
 
-        rosterData[activeRoster]
-            .players[index] =
-            newName.trim();
-
-
-        saveData();
-
-        updateEverything();
+        return;
 
     }
 
-}
+    const newElo =
+        prompt(
+            "Elo rating:",
+            player.elo
+        );
 
+    if (newElo === null) {
+
+        return;
+
+    }
+
+    const elo =
+        Number(newElo);
+
+    if (!elo || elo < 0) {
+
+        alert("Please enter a valid Elo rating.");
+
+        return;
+
+    }
+
+    player.name =
+        newName.trim();
+
+    player.elo =
+        elo;
+
+    saveData();
+
+    updateEverything();
+
+}
 
 /*
 ====================================================
@@ -1069,27 +1151,22 @@ function deletePlayer(index) {
         rosterData[activeRoster]
             .players[index];
 
-
     const confirmed =
         confirm(
-            `Remove ${player} from ${activeRoster}?`
+            `Remove ${player.name} from ${activeRoster}?`
         );
 
-
     if (!confirmed) return;
-
 
     rosterData[activeRoster]
         .players
         .splice(index, 1);
-
 
     saveData();
 
     updateEverything();
 
 }
-
 
 /*
 ====================================================
@@ -1104,14 +1181,11 @@ function renderPairings() {
             "pairings-body"
         );
 
-
     body.innerHTML = "";
-
 
     const pairings =
         rosterData[activeRoster]
             .pairings;
-
 
     if (pairings.length === 0) {
 
@@ -1135,29 +1209,26 @@ function renderPairings() {
 
     }
 
-
     pairings.forEach((pair, index) => {
 
         const row =
             document.createElement("tr");
 
-
         row.innerHTML = `
 
-            <td class="rank">
+            <td>
                 ${index + 1}
             </td>
 
             <td>
-                ${pair.white}
+                ${escapeHtml(pair.white)}
             </td>
 
             <td>
-                ${pair.black}
+                ${escapeHtml(pair.black)}
             </td>
 
         `;
-
 
         body.appendChild(row);
 
@@ -1165,10 +1236,31 @@ function renderPairings() {
 
 }
 
+/*
+====================================================
+ESCAPE HTML
+====================================================
+*/
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
 
 /*
 ====================================================
-UPDATE ALL UI
+UPDATE EVERYTHING
 ====================================================
 */
 
@@ -1179,36 +1271,30 @@ function updateEverything() {
     ).textContent =
         activeRoster;
 
-
     document.getElementById(
         "updates-roster-name"
     ).textContent =
         activeRoster;
-
 
     document.getElementById(
         "history-roster-name"
     ).textContent =
         activeRoster;
 
-
     document.getElementById(
         "home-description"
     ).textContent =
         `Current pairings for ${activeRoster}.`;
-
 
     document.getElementById(
         "roster-details-name"
     ).textContent =
         activeRoster;
 
-
     document.getElementById(
         "roster-details-count"
     ).textContent =
         `${rosterData[activeRoster].players.length} players`;
-
 
     renderRosterSelectors();
 
@@ -1217,7 +1303,6 @@ function updateEverything() {
     renderPairings();
 
 }
-
 
 /*
 ====================================================
@@ -1240,16 +1325,39 @@ document
         }
     );
 
-
-/*
-====================================================
-INITIAL SAVE
-====================================================
-*/
-
 saveData();
 
 </script>
 
 </body>
 </html>
+```
+
+ ### Step 2 — Commit the change
+
+ Click **Commit changes** at the bottom.
+
+ Wait a minute or so for GitHub Pages to update.
+
+ ### Step 3 — Test it
+
+ Go to **Updates**.
+
+ You should now see Dummy 1 with:
+
+ - Alex — 1500
+- Jordan — 1450
+- Sarah — 1400
+- Michael — 1350
+- Emma — 1300
+- David — 1250
+- Noah — 1200
+- Liam — 1150
+
+ Try clicking **Edit** on Alex.
+
+ You should be able to change **both his name and Elo**.
+
+ Then add a completely new player with a name and Elo.
+
+ Once that works, we're ready for the much bigger part: **standings + results + automatic rank + Generate Pairings**.
