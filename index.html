@@ -1,488 +1,1255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Club Pairings</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<title>Chess Club Pairings</title>
 
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f3f4f6;
-            color: #1f2937;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        /* LOGIN */
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f3f4f6;
+    color: #1f2937;
+}
 
-        #login-screen {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+/* LOGIN */
 
-        .login-box {
-            width: 100%;
-            max-width: 420px;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            padding: 35px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
+#login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
 
-        .logo {
-            font-size: 42px;
-            margin-bottom: 10px;
-        }
+.login-box {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 35px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.08);
+    text-align: center;
+}
 
-        .login-box h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-        }
+.logo {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
 
-        .login-box p {
-            color: #6b7280;
-            margin-bottom: 25px;
-        }
+.login-box h1 {
+    margin: 0 0 8px;
+}
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
+.login-box p {
+    color: #6b7280;
+}
 
-        button {
-            border: none;
-            border-radius: 6px;
-            padding: 11px 18px;
-            font-size: 15px;
-            cursor: pointer;
-            background: #2563eb;
-            color: white;
-        }
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
 
-        button:hover {
-            background: #1d4ed8;
-        }
+button {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+}
 
-        .error {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 10px;
-        }
+button:hover {
+    background: #1d4ed8;
+}
 
-        /* MAIN SITE */
+.error {
+    color: #dc2626;
+    margin-top: 10px;
+}
 
-        #site {
-            display: none;
-            min-height: 100vh;
-        }
+/* SITE */
 
-        header {
-            background: #ffffff;
-            border-bottom: 1px solid #d1d5db;
-        }
+#site {
+    display: none;
+    min-height: 100vh;
+}
 
-        .header-inner {
-            max-width: 1100px;
-            margin: auto;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
+header {
+    background: white;
+    border-bottom: 1px solid #d1d5db;
+}
 
-        .brand {
-            font-weight: bold;
-            font-size: 20px;
-        }
+.header-inner {
+    max-width: 1150px;
+    margin: auto;
+    padding: 16px 20px;
+}
 
-        nav {
-            display: flex;
-            gap: 5px;
-        }
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
 
-        nav button {
-            background: transparent;
-            color: #4b5563;
-        }
+.brand {
+    font-size: 20px;
+    font-weight: bold;
+}
 
-        nav button:hover,
-        nav button.active {
-            background: #e5e7eb;
-            color: #111827;
-        }
+.active-roster {
+    margin-top: 15px;
+    padding: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 7px;
+}
 
-        main {
-            max-width: 1100px;
-            margin: auto;
-            padding: 35px 20px;
-        }
+.active-roster strong {
+    color: #1d4ed8;
+}
 
-        .page {
-            display: none;
-        }
+nav {
+    display: flex;
+    gap: 5px;
+    margin-top: 15px;
+}
 
-        .page.active {
-            display: block;
-        }
+nav button {
+    background: transparent;
+    color: #4b5563;
+}
 
-        .page-title {
-            margin-bottom: 25px;
-        }
+nav button:hover,
+nav button.active {
+    background: #e5e7eb;
+    color: #111827;
+}
 
-        .page-title h2 {
-            margin: 0 0 5px;
-            font-size: 28px;
-        }
+main {
+    max-width: 1150px;
+    margin: auto;
+    padding: 35px 20px;
+}
 
-        .page-title p {
-            margin: 0;
-            color: #6b7280;
-        }
+.page {
+    display: none;
+}
 
-        /* PAIRINGS */
+.page.active {
+    display: block;
+}
 
-        .pairings-container {
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            overflow: hidden;
-        }
+.page-title {
+    margin-bottom: 25px;
+}
 
-        .pairings-header {
-            padding: 18px 20px;
-            background: #f9fafb;
-            border-bottom: 1px solid #d1d5db;
-            font-weight: bold;
-        }
+.page-title h2 {
+    margin: 0 0 5px;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+.page-title p {
+    margin: 0;
+    color: #6b7280;
+}
 
-        th,
-        td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-        }
+/* CARDS */
 
-        th {
-            background: #f3f4f6;
-            font-weight: 600;
-        }
+.card {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+.card h3 {
+    margin-top: 0;
+}
 
-        .rank {
-            width: 90px;
-            text-align: center;
-        }
+/* ROSTER SELECTOR */
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
-        }
+.roster-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
 
-        /* UPDATE CARDS */
+.roster-button {
+    background: white;
+    color: #374151;
+    border: 2px solid #d1d5db;
+    padding: 16px;
+    text-align: left;
+}
 
-        .card {
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+.roster-button:hover {
+    background: #f9fafb;
+}
 
-        .card h3 {
-            margin-top: 0;
-        }
+.roster-button.selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
 
-        .danger {
-            background: #dc2626;
-        }
+.roster-button .roster-name {
+    display: block;
+    font-size: 17px;
+    font-weight: bold;
+}
 
-        .danger:hover {
-            background: #b91c1c;
-        }
+.roster-button .player-count {
+    display: block;
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: 13px;
+}
 
-        /* MOBILE */
+/* TABLES */
 
-        @media (max-width: 700px) {
-            .header-inner {
-                flex-direction: column;
-                align-items: stretch;
-            }
+.table-container {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-            nav {
-                width: 100%;
-            }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-            nav button {
-                flex: 1;
-            }
+th,
+td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
 
-            th,
-            td {
-                padding: 11px 10px;
-            }
-        }
-    </style>
+th {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* PLAYER MANAGEMENT */
+
+.add-player {
+    display: flex;
+    gap: 10px;
+}
+
+.add-player input {
+    margin: 0;
+    flex: 1;
+}
+
+.player-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.small-button {
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
+.delete-button {
+    background: #dc2626;
+}
+
+.delete-button:hover {
+    background: #b91c1c;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #6b7280;
+}
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+    .top-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    nav {
+        width: 100%;
+    }
+
+    nav button {
+        flex: 1;
+    }
+
+    .roster-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .add-player {
+        flex-direction: column;
+    }
+
+    .player-actions {
+        flex-direction: column;
+    }
+}
+</style>
 </head>
 
 <body>
 
-    <!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 
-    <section id="login-screen">
-        <div class="login-box">
-            <div class="logo">♟</div>
+<section id="login-screen">
 
-            <h1>Chess Club</h1>
-            <p>Enter the admin password to continue.</p>
+    <div class="login-box">
 
-            <input
-                type="password"
-                id="password"
-                placeholder="Password"
-            >
+        <div class="logo">♟</div>
 
-            <button onclick="login()">Enter</button>
+        <h1>Chess Club</h1>
 
-            <div id="login-error" class="error"></div>
+        <p>
+            Enter the admin password to continue.
+        </p>
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Password"
+        >
+
+        <button onclick="login()">
+            Enter
+        </button>
+
+        <div id="login-error" class="error"></div>
+
+    </div>
+
+</section>
+
+
+<!-- MAIN SITE -->
+
+<div id="site">
+
+<header>
+
+<div class="header-inner">
+
+    <div class="top-row">
+
+        <div class="brand">
+            ♟ Chess Club Pairings
         </div>
-    </section>
-
-
-    <!-- MAIN WEBSITE -->
-
-    <div id="site">
-
-        <header>
-            <div class="header-inner">
-
-                <div class="brand">
-                    ♟ Chess Club Pairings
-                </div>
-
-                <nav>
-                    <button
-                        class="active"
-                        onclick="showPage('home', this)"
-                    >
-                        Home
-                    </button>
-
-                    <button
-                        onclick="showPage('updates', this)"
-                    >
-                        Updates
-                    </button>
-
-                    <button
-                        onclick="showPage('history', this)"
-                    >
-                        History
-                    </button>
-                </nav>
-
-            </div>
-        </header>
-
-
-        <main>
-
-            <!-- HOME -->
-
-            <section id="home" class="page active">
-
-                <div class="page-title">
-                    <h2>Current Pairings</h2>
-                    <p>Today's chess club pairings.</p>
-                </div>
-
-                <div class="pairings-container">
-
-                    <div class="pairings-header">
-                        Current Round
-                    </div>
-
-                    <div id="pairings-area">
-
-                        <div class="empty-state">
-                            No pairings have been created yet.
-                            <br><br>
-                            Go to <strong>Updates</strong> to create the first round.
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- UPDATES -->
-
-            <section id="updates" class="page">
-
-                <div class="page-title">
-                    <h2>Updates</h2>
-                    <p>Manage players, results, and tournament information.</p>
-                </div>
-
-                <div class="card">
-                    <h3>Player Management</h3>
-
-                    <p>
-                        Player management and tournament controls
-                        will be added here.
-                    </p>
-
-                    <button onclick="alert('Player management coming next!')">
-                        Manage Players
-                    </button>
-                </div>
-
-
-                <div class="card">
-                    <h3>Generate Pairings</h3>
-
-                    <p>
-                        The Swiss pairing system will be added here.
-                    </p>
-
-                    <button onclick="alert('Pairing system coming next!')">
-                        Generate Pairings
-                    </button>
-                </div>
-
-
-                <div class="card">
-                    <h3>Results</h3>
-
-                    <p>
-                        Win, draw, loss, excused absence,
-                        and forfeit controls will be added here.
-                    </p>
-                </div>
-
-            </section>
-
-
-            <!-- HISTORY -->
-
-            <section id="history" class="page">
-
-                <div class="page-title">
-                    <h2>Pairing History</h2>
-                    <p>Previous rounds and tournament records.</p>
-                </div>
-
-                <div class="card">
-
-                    <h3>Round History</h3>
-
-                    <div class="empty-state">
-                        No rounds have been recorded yet.
-                    </div>
-
-                </div>
-
-            </section>
-
-        </main>
 
     </div>
 
 
-    <script>
+    <div class="active-roster">
 
-        /*
-         * CHANGE THIS PASSWORD
-         *
-         * Replace "CHANGE_ME" with the password
-         * you want to use for your chess club.
-         */
+        Active roster:
+        <strong id="active-roster-name">
+            Dummy 1
+        </strong>
 
-        const ADMIN_PASSWORD = "CHANGE_ME";
+    </div>
 
 
-        function login() {
+    <nav>
 
-            const password =
-                document.getElementById("password").value;
+        <button
+            class="active"
+            onclick="showPage('home', this)"
+        >
+            Home
+        </button>
 
-            const error =
-                document.getElementById("login-error");
+        <button
+            onclick="showPage('updates', this)"
+        >
+            Updates
+        </button>
 
-            if (password === ADMIN_PASSWORD) {
+        <button
+            onclick="showPage('rosters', this)"
+        >
+            Rosters
+        </button>
 
-                document.getElementById("login-screen").style.display = "none";
+        <button
+            onclick="showPage('history', this)"
+        >
+            History
+        </button>
 
-                document.getElementById("site").style.display = "block";
+    </nav>
 
-                error.textContent = "";
+</div>
 
-            } else {
-
-                error.textContent = "Incorrect password.";
-
-            }
-        }
-
-
-        function showPage(pageId, button) {
-
-            document
-                .querySelectorAll(".page")
-                .forEach(page => {
-                    page.classList.remove("active");
-                });
-
-            document
-                .getElementById(pageId)
-                .classList.add("active");
+</header>
 
 
-            document
-                .querySelectorAll("nav button")
-                .forEach(btn => {
-                    btn.classList.remove("active");
-                });
-
-            button.classList.add("active");
-        }
+<main>
 
 
-        document
-            .getElementById("password")
-            .addEventListener("keydown", function(event) {
+<!-- HOME -->
 
-                if (event.key === "Enter") {
-                    login();
+<section id="home" class="page active">
+
+    <div class="page-title">
+
+        <h2>Current Pairings</h2>
+
+        <p id="home-description">
+            Current pairings for Dummy 1.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Select Roster</h3>
+
+        <div
+            id="home-roster-selector"
+            class="roster-selector"
+        ></div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th style="width:100px;">Rank</th>
+                    <th>White</th>
+                    <th>Black</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="pairings-body">
+
+                <tr>
+
+                    <td
+                        colspan="3"
+                        class="empty-state"
+                    >
+                        No pairings have been created yet.
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- UPDATES -->
+
+<section id="updates" class="page">
+
+    <div class="page-title">
+
+        <h2>Updates</h2>
+
+        <p>
+            Managing:
+            <strong id="updates-roster-name">
+                Dummy 1
+            </strong>
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Player Management</h3>
+
+        <p>
+            Add players to the active roster.
+        </p>
+
+        <div class="add-player">
+
+            <input
+                id="new-player-name"
+                placeholder="Enter player name"
+            >
+
+            <button onclick="addPlayer()">
+                Add Player
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:80px;">
+                        #
+                    </th>
+
+                    <th>
+                        Player
+                    </th>
+
+                    <th style="width:180px;">
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="players-body"></tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- ROSTERS -->
+
+<section id="rosters" class="page">
+
+    <div class="page-title">
+
+        <h2>Rosters</h2>
+
+        <p>
+            Select which roster you want to manage.
+        </p>
+
+    </div>
+
+
+    <div
+        id="roster-selector"
+        class="roster-selector"
+    ></div>
+
+
+    <div class="card">
+
+        <h3 id="roster-details-name">
+            Dummy 1
+        </h3>
+
+        <p id="roster-details-count">
+            0 players
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- HISTORY -->
+
+<section id="history" class="page">
+
+    <div class="page-title">
+
+        <h2>Pairing History</h2>
+
+        <p>
+            Previous rounds for
+            <strong id="history-roster-name">
+                Dummy 1
+            </strong>
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="empty-state">
+
+            No rounds have been recorded yet.
+
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+<script>
+
+/*
+====================================================
+PASSWORD
+====================================================
+*/
+
+const ADMIN_PASSWORD = "CHANGE_ME";
+
+
+/*
+====================================================
+ROSTER DATA
+====================================================
+*/
+
+const defaultData = {
+
+    "Dummy 1": {
+
+        players: [
+            "Alex",
+            "Jordan",
+            "Sarah",
+            "Michael",
+            "Emma",
+            "David",
+            "Noah",
+            "Liam"
+        ],
+
+        pairings: [],
+
+        history: []
+
+    },
+
+
+    "Roster 1": {
+
+        players: [],
+
+        pairings: [],
+
+        history: []
+
+    },
+
+
+    "Roster 2": {
+
+        players: [],
+
+        pairings: [],
+
+        history: []
+
+    }
+
+};
+
+
+/*
+====================================================
+LOAD / SAVE DATA
+====================================================
+*/
+
+let rosterData =
+    JSON.parse(
+        localStorage.getItem("chessClubData")
+    ) || defaultData;
+
+
+let activeRoster =
+    localStorage.getItem("activeRoster") ||
+    "Dummy 1";
+
+
+function saveData() {
+
+    localStorage.setItem(
+        "chessClubData",
+        JSON.stringify(rosterData)
+    );
+
+    localStorage.setItem(
+        "activeRoster",
+        activeRoster
+    );
+
+}
+
+
+/*
+====================================================
+LOGIN
+====================================================
+*/
+
+function login() {
+
+    const password =
+        document.getElementById("password").value;
+
+    const error =
+        document.getElementById("login-error");
+
+
+    if (password === ADMIN_PASSWORD) {
+
+        document.getElementById(
+            "login-screen"
+        ).style.display = "none";
+
+        document.getElementById(
+            "site"
+        ).style.display = "block";
+
+        updateEverything();
+
+    } else {
+
+        error.textContent =
+            "Incorrect password.";
+
+    }
+
+}
+
+
+/*
+====================================================
+NAVIGATION
+====================================================
+*/
+
+function showPage(pageId, button) {
+
+    document
+        .querySelectorAll(".page")
+        .forEach(page => {
+
+            page.classList.remove("active");
+
+        });
+
+
+    document
+        .getElementById(pageId)
+        .classList.add("active");
+
+
+    document
+        .querySelectorAll("nav button")
+        .forEach(btn => {
+
+            btn.classList.remove("active");
+
+        });
+
+
+    button.classList.add("active");
+
+    updateEverything();
+
+}
+
+
+/*
+====================================================
+SELECT ROSTER
+====================================================
+*/
+
+function selectRoster(name) {
+
+    activeRoster = name;
+
+    saveData();
+
+    updateEverything();
+
+}
+
+
+/*
+====================================================
+ROSTER SELECTOR
+====================================================
+*/
+
+function renderRosterSelectors() {
+
+    const containers = [
+
+        document.getElementById(
+            "roster-selector"
+        ),
+
+        document.getElementById(
+            "home-roster-selector"
+        )
+
+    ];
+
+
+    containers.forEach(container => {
+
+        container.innerHTML = "";
+
+
+        Object.keys(rosterData)
+            .forEach(name => {
+
+                const button =
+                    document.createElement("button");
+
+                button.className =
+                    "roster-button";
+
+
+                if (name === activeRoster) {
+
+                    button.classList.add(
+                        "selected"
+                    );
+
                 }
+
+
+                button.innerHTML = `
+
+                    <span class="roster-name">
+                        ${name}
+                    </span>
+
+                    <span class="player-count">
+                        ${rosterData[name].players.length}
+                        players
+                    </span>
+
+                `;
+
+
+                button.onclick = function() {
+
+                    selectRoster(name);
+
+                };
+
+
+                container.appendChild(button);
 
             });
 
-    </script>
+    });
+
+}
+
+
+/*
+====================================================
+PLAYER MANAGEMENT
+====================================================
+*/
+
+function renderPlayers() {
+
+    const body =
+        document.getElementById(
+            "players-body"
+        );
+
+
+    body.innerHTML = "";
+
+
+    const players =
+        rosterData[activeRoster].players;
+
+
+    if (players.length === 0) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="3"
+                    class="empty-state"
+                >
+                    No players have been added yet.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    players.forEach((player, index) => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${index + 1}</td>
+
+            <td>${player}</td>
+
+            <td>
+
+                <div class="player-actions">
+
+                    <button
+                        class="small-button"
+                        onclick="editPlayer(${index})"
+                    >
+                        Edit
+                    </button>
+
+                    <button
+                        class="small-button delete-button"
+                        onclick="deletePlayer(${index})"
+                    >
+                        Remove
+                    </button>
+
+                </div>
+
+            </td>
+
+        `;
+
+
+        body.appendChild(row);
+
+    });
+
+}
+
+
+/*
+====================================================
+ADD PLAYER
+====================================================
+*/
+
+function addPlayer() {
+
+    const input =
+        document.getElementById(
+            "new-player-name"
+        );
+
+
+    const name =
+        input.value.trim();
+
+
+    if (!name) {
+
+        alert("Please enter a player name.");
+
+        return;
+
+    }
+
+
+    rosterData[activeRoster]
+        .players
+        .push(name);
+
+
+    input.value = "";
+
+
+    saveData();
+
+    updateEverything();
+
+}
+
+
+/*
+====================================================
+EDIT PLAYER
+====================================================
+*/
+
+function editPlayer(index) {
+
+    const oldName =
+        rosterData[activeRoster]
+            .players[index];
+
+
+    const newName =
+        prompt(
+            "Enter the new player name:",
+            oldName
+        );
+
+
+    if (
+        newName !== null &&
+        newName.trim() !== ""
+    ) {
+
+        rosterData[activeRoster]
+            .players[index] =
+            newName.trim();
+
+
+        saveData();
+
+        updateEverything();
+
+    }
+
+}
+
+
+/*
+====================================================
+DELETE PLAYER
+====================================================
+*/
+
+function deletePlayer(index) {
+
+    const player =
+        rosterData[activeRoster]
+            .players[index];
+
+
+    const confirmed =
+        confirm(
+            `Remove ${player} from ${activeRoster}?`
+        );
+
+
+    if (!confirmed) return;
+
+
+    rosterData[activeRoster]
+        .players
+        .splice(index, 1);
+
+
+    saveData();
+
+    updateEverything();
+
+}
+
+
+/*
+====================================================
+PAIRINGS
+====================================================
+*/
+
+function renderPairings() {
+
+    const body =
+        document.getElementById(
+            "pairings-body"
+        );
+
+
+    body.innerHTML = "";
+
+
+    const pairings =
+        rosterData[activeRoster]
+            .pairings;
+
+
+    if (pairings.length === 0) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="3"
+                    class="empty-state"
+                >
+                    No pairings have been created yet.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    pairings.forEach((pair, index) => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td class="rank">
+                ${index + 1}
+            </td>
+
+            <td>
+                ${pair.white}
+            </td>
+
+            <td>
+                ${pair.black}
+            </td>
+
+        `;
+
+
+        body.appendChild(row);
+
+    });
+
+}
+
+
+/*
+====================================================
+UPDATE ALL UI
+====================================================
+*/
+
+function updateEverything() {
+
+    document.getElementById(
+        "active-roster-name"
+    ).textContent =
+        activeRoster;
+
+
+    document.getElementById(
+        "updates-roster-name"
+    ).textContent =
+        activeRoster;
+
+
+    document.getElementById(
+        "history-roster-name"
+    ).textContent =
+        activeRoster;
+
+
+    document.getElementById(
+        "home-description"
+    ).textContent =
+        `Current pairings for ${activeRoster}.`;
+
+
+    document.getElementById(
+        "roster-details-name"
+    ).textContent =
+        activeRoster;
+
+
+    document.getElementById(
+        "roster-details-count"
+    ).textContent =
+        `${rosterData[activeRoster].players.length} players`;
+
+
+    renderRosterSelectors();
+
+    renderPlayers();
+
+    renderPairings();
+
+}
+
+
+/*
+====================================================
+ENTER KEY
+====================================================
+*/
+
+document
+    .getElementById("password")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                login();
+
+            }
+
+        }
+    );
+
+
+/*
+====================================================
+INITIAL SAVE
+====================================================
+*/
+
+saveData();
+
+</script>
 
 </body>
 </html>
