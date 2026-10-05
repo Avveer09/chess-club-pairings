@@ -1,26 +1,3 @@
-Perfect. Let's add that now. ♟️
-
- We're going to make **one bigger update** rather than constantly replacing little pieces. This version adds the foundation for **player names + Elo**, while keeping your three rosters working exactly as they are.
-
- ### What you'll get
-
- - Add a player with **Name + Elo**
-- Edit **Name + Elo**
-- Remove players
-- Elo is displayed in the roster
-- Dummy 1 has test Elo ratings
-- Player data stays separate between rosters
-- Existing roster data is preserved as much as possible
-
- ### Step 1
-
- Go to:
-
- **GitHub → your repository → `index.html` → ✏️ Edit**
-
- Delete the current contents and replace them with the code below.
-
-```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -345,6 +322,7 @@ tr:last-child td {
 
 </section>
 
+
 <div id="site">
 
 <header>
@@ -401,7 +379,9 @@ tr:last-child td {
 
 </header>
 
+
 <main>
+
 
 <section id="home" class="page active">
 
@@ -458,6 +438,7 @@ tr:last-child td {
 
 </section>
 
+
 <section id="updates" class="page">
 
     <div class="page-title">
@@ -472,6 +453,7 @@ tr:last-child td {
         </p>
 
     </div>
+
 
     <div class="card">
 
@@ -502,6 +484,7 @@ tr:last-child td {
         </div>
 
     </div>
+
 
     <div class="table-container">
 
@@ -539,6 +522,7 @@ tr:last-child td {
 
 </section>
 
+
 <section id="rosters" class="page">
 
     <div class="page-title">
@@ -568,6 +552,7 @@ tr:last-child td {
 
 </section>
 
+
 <section id="history" class="page">
 
     <div class="page-title">
@@ -593,13 +578,16 @@ tr:last-child td {
 
 </section>
 
+
 </main>
 
 </div>
 
+
 <script>
 
 const ADMIN_PASSWORD = "CHANGE_ME";
+
 
 /*
 ====================================================
@@ -674,6 +662,7 @@ const defaultData = {
 
     },
 
+
     "Roster 1": {
 
         players: [],
@@ -683,6 +672,7 @@ const defaultData = {
         history: []
 
     },
+
 
     "Roster 2": {
 
@@ -695,6 +685,7 @@ const defaultData = {
     }
 
 };
+
 
 /*
 ====================================================
@@ -710,9 +701,11 @@ let rosterData =
         localStorage.getItem("chessClubData")
     ) || defaultData;
 
+
 let activeRoster =
     localStorage.getItem("activeRoster")
     || "Dummy 1";
+
 
 /*
 Upgrade old player data
@@ -750,6 +743,7 @@ Object.keys(rosterData).forEach(rosterName => {
 
 });
 
+
 function saveData() {
 
     localStorage.setItem(
@@ -764,6 +758,7 @@ function saveData() {
 
 }
 
+
 /*
 ====================================================
 LOGIN
@@ -777,6 +772,7 @@ function login() {
 
     const error =
         document.getElementById("login-error");
+
 
     if (password === ADMIN_PASSWORD) {
 
@@ -799,6 +795,7 @@ function login() {
 
 }
 
+
 /*
 ====================================================
 NAVIGATION
@@ -815,9 +812,11 @@ function showPage(pageId, button) {
 
         });
 
+
     document
         .getElementById(pageId)
         .classList.add("active");
+
 
     document
         .querySelectorAll("nav button")
@@ -827,11 +826,13 @@ function showPage(pageId, button) {
 
         });
 
+
     button.classList.add("active");
 
     updateEverything();
 
 }
+
 
 /*
 ====================================================
@@ -848,6 +849,7 @@ function selectRoster(name) {
     updateEverything();
 
 }
+
 
 /*
 ====================================================
@@ -869,9 +871,11 @@ function renderRosterSelectors() {
 
     ];
 
+
     containers.forEach(container => {
 
         container.innerHTML = "";
+
 
         Object.keys(rosterData)
             .forEach(name => {
@@ -882,6 +886,7 @@ function renderRosterSelectors() {
                 button.className =
                     "roster-button";
 
+
                 if (name === activeRoster) {
 
                     button.classList.add(
@@ -889,6 +894,7 @@ function renderRosterSelectors() {
                     );
 
                 }
+
 
                 button.innerHTML = `
 
@@ -903,11 +909,13 @@ function renderRosterSelectors() {
 
                 `;
 
+
                 button.onclick = function() {
 
                     selectRoster(name);
 
                 };
+
 
                 container.appendChild(button);
 
@@ -916,6 +924,7 @@ function renderRosterSelectors() {
     });
 
 }
+
 
 /*
 ====================================================
@@ -930,10 +939,13 @@ function renderPlayers() {
             "players-body"
         );
 
+
     body.innerHTML = "";
+
 
     const players =
         rosterData[activeRoster].players;
+
 
     if (players.length === 0) {
 
@@ -957,10 +969,12 @@ function renderPlayers() {
 
     }
 
+
     players.forEach((player, index) => {
 
         const row =
             document.createElement("tr");
+
 
         row.innerHTML = `
 
@@ -1000,11 +1014,13 @@ function renderPlayers() {
 
         `;
 
+
         body.appendChild(row);
 
     });
 
 }
+
 
 /*
 ====================================================
@@ -1019,16 +1035,20 @@ function addPlayer() {
             "new-player-name"
         );
 
+
     const eloInput =
         document.getElementById(
             "new-player-elo"
         );
 
+
     const name =
         nameInput.value.trim();
 
+
     const elo =
         Number(eloInput.value);
+
 
     if (!name) {
 
@@ -1038,6 +1058,7 @@ function addPlayer() {
 
     }
 
+
     if (!elo || elo < 0) {
 
         alert("Please enter a valid Elo rating.");
@@ -1045,6 +1066,7 @@ function addPlayer() {
         return;
 
     }
+
 
     rosterData[activeRoster]
         .players
@@ -1065,15 +1087,18 @@ function addPlayer() {
 
         });
 
+
     nameInput.value = "";
 
     eloInput.value = "";
+
 
     saveData();
 
     updateEverything();
 
 }
+
 
 /*
 ====================================================
@@ -1089,11 +1114,13 @@ function editPlayer(index) {
         rosterData[activeRoster]
             .players[index];
 
+
     const newName =
         prompt(
             "Player name:",
             player.name
         );
+
 
     if (
         newName === null ||
@@ -1104,11 +1131,13 @@ function editPlayer(index) {
 
     }
 
+
     const newElo =
         prompt(
             "Elo rating:",
             player.elo
         );
+
 
     if (newElo === null) {
 
@@ -1116,8 +1145,10 @@ function editPlayer(index) {
 
     }
 
+
     const elo =
         Number(newElo);
+
 
     if (!elo || elo < 0) {
 
@@ -1127,17 +1158,21 @@ function editPlayer(index) {
 
     }
 
+
     player.name =
         newName.trim();
 
+
     player.elo =
         elo;
+
 
     saveData();
 
     updateEverything();
 
 }
+
 
 /*
 ====================================================
@@ -1151,22 +1186,27 @@ function deletePlayer(index) {
         rosterData[activeRoster]
             .players[index];
 
+
     const confirmed =
         confirm(
             `Remove ${player.name} from ${activeRoster}?`
         );
 
+
     if (!confirmed) return;
+
 
     rosterData[activeRoster]
         .players
         .splice(index, 1);
+
 
     saveData();
 
     updateEverything();
 
 }
+
 
 /*
 ====================================================
@@ -1181,11 +1221,14 @@ function renderPairings() {
             "pairings-body"
         );
 
+
     body.innerHTML = "";
+
 
     const pairings =
         rosterData[activeRoster]
             .pairings;
+
 
     if (pairings.length === 0) {
 
@@ -1209,10 +1252,12 @@ function renderPairings() {
 
     }
 
+
     pairings.forEach((pair, index) => {
 
         const row =
             document.createElement("tr");
+
 
         row.innerHTML = `
 
@@ -1230,11 +1275,13 @@ function renderPairings() {
 
         `;
 
+
         body.appendChild(row);
 
     });
 
 }
+
 
 /*
 ====================================================
@@ -1258,6 +1305,7 @@ function escapeHtml(value) {
 
 }
 
+
 /*
 ====================================================
 UPDATE EVERYTHING
@@ -1271,30 +1319,36 @@ function updateEverything() {
     ).textContent =
         activeRoster;
 
+
     document.getElementById(
         "updates-roster-name"
     ).textContent =
         activeRoster;
+
 
     document.getElementById(
         "history-roster-name"
     ).textContent =
         activeRoster;
 
+
     document.getElementById(
         "home-description"
     ).textContent =
         `Current pairings for ${activeRoster}.`;
+
 
     document.getElementById(
         "roster-details-name"
     ).textContent =
         activeRoster;
 
+
     document.getElementById(
         "roster-details-count"
     ).textContent =
         `${rosterData[activeRoster].players.length} players`;
+
 
     renderRosterSelectors();
 
@@ -1303,6 +1357,7 @@ function updateEverything() {
     renderPairings();
 
 }
+
 
 /*
 ====================================================
@@ -1325,39 +1380,10 @@ document
         }
     );
 
+
 saveData();
 
 </script>
 
 </body>
 </html>
-```
-
- ### Step 2 — Commit the change
-
- Click **Commit changes** at the bottom.
-
- Wait a minute or so for GitHub Pages to update.
-
- ### Step 3 — Test it
-
- Go to **Updates**.
-
- You should now see Dummy 1 with:
-
- - Alex — 1500
-- Jordan — 1450
-- Sarah — 1400
-- Michael — 1350
-- Emma — 1300
-- David — 1250
-- Noah — 1200
-- Liam — 1150
-
- Try clicking **Edit** on Alex.
-
- You should be able to change **both his name and Elo**.
-
- Then add a completely new player with a name and Elo.
-
- Once that works, we're ready for the much bigger part: **standings + results + automatic rank + Generate Pairings**.
