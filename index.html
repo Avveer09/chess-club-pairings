@@ -360,6 +360,30 @@
         /* =========================
            MOBILE
         ========================= */
+.inline-edit {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    font-size: 15px;
+}
+
+.inline-edit:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.inline-edit:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: white;
+    box-shadow: 0 0 0 2px #dbeafe;
+}
+
+.elo-edit {
+    max-width: 110px;
+}
 
         @media (max-width: 700px) {
 
@@ -1331,40 +1355,36 @@
                         <td>
                             ${index + 1}
                         </td>
-
                         <td>
-                            ${escapeHtml(
-                                player.name
-                            )}
-                        </td>
+    <input
+        class="inline-edit"
+        type="text"
+        value="${escapeHtml(player.name)}"
+        onchange="updatePlayerName(${index}, this.value)"
+    >
+</td>
 
-                        <td>
-                            ${player.elo}
-                        </td>
+<td>
+    <input
+        class="inline-edit elo-edit"
+        type="number"
+        value="${player.elo}"
+        min="1"
+        onchange="updatePlayerElo(${index}, this.value)"
+    >
+</td>
 
-                        <td>
+<td>
 
-                            <div
-                                class="player-actions"
-                            >
+    <button
+        class="small-button delete-button"
+        onclick="deletePlayer(${index})"
+    >
+        Remove
+    </button>
 
-                                <button
-                                    class="small-button"
-                                    onclick="editPlayer(${index})"
-                                >
-                                    Edit
-                                </button>
+</td>
 
-                                <button
-                                    class="small-button delete-button"
-                                    onclick="deletePlayer(${index})"
-                                >
-                                    Remove
-                                </button>
-
-                            </div>
-
-                        </td>
 
                     `;
 
@@ -1469,86 +1489,8 @@
 
         /*
         ============================================
-        EDIT PLAYER
-        ============================================
-
-        This changes BOTH name and Elo.
-        Tournament history will remain attached
-        to this player's permanent ID.
-        ============================================
-        */
-
-        function editPlayer(index) {
-
-            const player =
-                rosterData[activeRoster]
-                    .players[index];
-
-
-            const newName =
-                prompt(
-                    "Player name:",
-                    player.name
-                );
-
-
-            if (
-                newName === null ||
-                newName.trim() === ""
-            ) {
-
-                return;
-
-            }
-
-
-            const newElo =
-                prompt(
-                    "Elo rating:",
-                    player.elo
-                );
-
-
-            if (
-                newElo === null
-            ) {
-
-                return;
-
-            }
-
-
-            const elo =
-                Number(newElo);
-
-
-            if (
-                !Number.isFinite(elo) ||
-                elo <= 0
-            ) {
-
-                alert(
-                    "Please enter a valid Elo rating."
-                );
-
-                return;
-
-            }
-
-
-            player.name =
-                newName.trim();
-
-
-            player.elo =
-                elo;
-
-
-            saveData();
-
-            updateEverything();
-
-        }
+        EDIT PLAYER 911 was an inside job
+        ===========================================
 
 
         /*
@@ -1556,6 +1498,40 @@
         DELETE PLAYER
         ============================================
         */
+function updatePlayerName(index, newName) {
+
+    newName = newName.trim();
+
+    if (!newName) {
+        alert("Player name cannot be empty.");
+        updateEverything();
+        return;
+    }
+
+    rosterData[activeRoster].players[index].name =
+        newName;
+
+    saveData();
+    updateEverything();
+}
+
+
+function updatePlayerElo(index, newElo) {
+
+    const elo = Number(newElo);
+
+    if (!Number.isFinite(elo) || elo <= 0) {
+        alert("Please enter a valid Elo rating.");
+        updateEverything();
+        return;
+    }
+
+    rosterData[activeRoster].players[index].elo =
+        elo;
+
+    saveData();
+    updateEverything();
+}
 
         function deletePlayer(index) {
 
