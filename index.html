@@ -53,6 +53,8 @@ tr:last-child td{border-bottom:0}
 .inline-edit{width:100%;padding:7px 9px;border:1px solid transparent;border-radius:5px;background:transparent}
 .inline-edit:hover,.inline-edit:focus{border-color:#2563eb;background:white}
 .elo-edit{max-width:110px}
+.stat-edit{width:75px;min-width:65px}
+.points-cell{font-weight:bold;white-space:nowrap}
 .delete-button{background:#dc2626}
 .delete-button:hover{background:#b91c1c}
 .status-select{padding:10px;border:1px solid #cbd5e1;border-radius:6px;width:100%;margin-top:12px}
@@ -129,10 +131,11 @@ table{min-width:550px}
 </div>
 <div class="card">
 <h3>Players</h3>
-<p>Click on a player's name or Elo to edit it.</p>
+<p>Edit a player's name, Elo, wins, losses, or draws directly. Points update automatically: <strong>Wins + 0.5 × Draws</strong>.</p>
+<p class="muted">Wins include awarded full points for byes, excused absences, and opponent forfeits. Manual changes do not rewrite completed round history.</p>
 <div class="table-container">
 <table>
-<thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Actions</th></tr></thead>
+<thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Wins</th><th>Losses</th><th>Draws</th><th>Points</th><th>Actions</th></tr></thead>
 <tbody id="players-body"></tbody>
 </table>
 </div>
@@ -249,6 +252,51 @@ for (const name of ROSTER_NAMES) {
     });
 }
 
+// Upgrade old localStorage records to editable W/L/D statistics.
+// Preserve existing points, including old awarded-by-bye points.
+function initializeStats(roster) {
+    const historical = new Map(roster.players.map(p => [p.id,{wins:0,losses:0,draws:0}]));
+    const add = (id,stat) => { const x=historical.get(id); if(x) x[stat]++; };
+    for (const round of roster.history) {
+        for (const r of round.results || []) {
+            if (r.type === "bye") { add(r.byeId || (round.pairings || []).find(p=>p.bye===r.player)?.byeId,"wins"); continue; }
+            const pair=(round.pairings||[]).find(p=>p.whiteId===r.whiteId && p.blackId===r.blackId) ||
+                (round.pairings||[]).find(p=>p.white===r.white && p.black===r.black);
+            const white=r.whiteId || pair?.whiteId;
+            const black=r.blackId || pair?.blackId;
+            switch (r.result) {
+                case "white_win": case "white-win": add(white,"wins"); add(black,"losses"); break;
+                case "black_win": case "black-win": add(black,"wins"); add(white,"losses"); break;
+                case "draw": add(white,"draws"); add(black,"draws"); break;
+                case "white_forfeit": case "white-forfeit": add(black,"wins"); add(white,"losses"); break;
+                case "black_forfeit": case "black-forfeit": add(white,"wins"); add(black,"losses"); break;
+                case "white_excused": case "white-excused": add(white,"wins"); break;
+                case "black_excused": case "black-excused": add(black,"wins"); break;
+            }
+        }
+    }
+    for (const p of roster.players) {
+        if ([p.wins,p.losses,p.draws].every(n=>Number.isInteger(n)&&n>=0)) {
+            p.score=p.wins+0.5*p.draws;
+            continue;
+        }
+        const totals=historical.get(p.id);
+        const previous=Number(p.score)||0;
+        const historicPoints=totals.wins+0.5*totals.draws;
+        if (Math.abs(previous-historicPoints)<0.001) {
+            p.wins=totals.wins;
+            p.draws=totals.draws;
+        } else {
+            // Preserve legacy standings if historical results were edited or unavailable.
+            p.wins=Math.floor(previous);
+            p.draws=Math.round((previous-p.wins)*2);
+        }
+        p.losses=totals.losses;
+        p.score=p.wins+0.5*p.draws;
+    }
+}
+for (const name of ROSTER_NAMES) initializeStats(rosterData[name]);
+
 let activeRoster = localStorage.getItem("activeRoster") || "Dummy 1";
 if (!ROSTER_NAMES.includes(activeRoster)) activeRoster = "Dummy 1";
 
@@ -357,32 +405,53 @@ function getRankedPlayers() {
 }
 
 function renderPlayers() {
-    const body = document.getElementById("players-body");
-    body.innerHTML = "";
-    const players = getRoster().players;
-
+    const body=document.getElementById("players-body");
+    body.innerHTML="";
+    const players=getRoster().players;
     if (!players.length) {
-        body.innerHTML = '<tr><td colspan="4" class="empty-state">No players added yet.</td></tr>';
+        body.innerHTML='<tr><td colspan="8" class="empty-state">No players added yet.</td></tr>';
         return;
     }
-
-    getRankedPlayers().forEach((player,index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
+    getRankedPlayers().forEach((player,index)=>{
+        const row=document.createElement("tr");
+        row.innerHTML=`
             <td>${index+1}</td>
             <td><input class="inline-edit player-name-edit" type="text"></td>
             <td><input class="inline-edit elo-edit player-elo-edit" type="number" min="1"></td>
-            <td><button class="small-button delete-button">Remove</button></td>
-        `;
-        const nameInput = row.querySelector(".player-name-edit");
-        const eloInput = row.querySelector(".player-elo-edit");
-        nameInput.value = player.name;
-        eloInput.value = player.elo;
-        nameInput.onchange = () => updatePlayerName(player.id,nameInput.value);
-        eloInput.onchange = () => updatePlayerElo(player.id,eloInput.value);
-        row.querySelector(".delete-button").onclick = () => deletePlayer(player.id);
+            <td><input class="inline-edit stat-edit player-wins-edit" type="number" min="0" step="1"></td>
+            <td><input class="inline-edit stat-edit player-losses-edit" type="number" min="0" step="1"></td>
+            <td><input class="inline-edit stat-edit player-draws-edit" type="number" min="0" step="1"></td>
+            <td class="points-cell">${player.score}</td>
+            <td><button class="small-button delete-button">Remove</button></td>`;
+        const nameInput=row.querySelector(".player-name-edit");
+        const eloInput=row.querySelector(".player-elo-edit");
+        nameInput.value=player.name;
+        eloInput.value=player.elo;
+        nameInput.onchange=()=>updatePlayerName(player.id,nameInput.value);
+        eloInput.onchange=()=>updatePlayerElo(player.id,eloInput.value);
+        for (const stat of ["wins","losses","draws"]) {
+            const input=row.querySelector(`.player-${stat}-edit`);
+            input.value=player[stat];
+            input.onchange=()=>updatePlayerStat(player.id,stat,input.value);
+        }
+        row.querySelector(".delete-button").onclick=()=>deletePlayer(player.id);
         body.appendChild(row);
     });
+}
+
+function updatePlayerStat(id,stat,value) {
+    const player=getRoster().players.find(p=>p.id===id);
+    if (!player || !["wins","losses","draws"].includes(stat)) return;
+    const number=Number(value);
+    if (value.trim()==="" || !Number.isSafeInteger(number) || number<0) {
+        alert("Enter a whole number of 0 or more.");
+        updateEverything();
+        return;
+    }
+    player[stat]=number;
+    player.score=player.wins+0.5*player.draws;
+    saveData();
+    updateEverything();
 }
 
 function addPlayer() {
@@ -400,6 +469,9 @@ function addPlayer() {
         name,
         elo,
         score:0,
+        wins:0,
+        losses:0,
+        draws:0,
         lastColor:null
     });
 
@@ -760,31 +832,22 @@ function recordResultsAndGenerate() {
     for (const item of results) {
         if (item.type==="bye") {
             const player=roster.players.find(p=>p.id===item.byeId);
-            if (player) player.score+=1;
+            if (player) { player.wins+=1; player.score=player.wins+0.5*player.draws; }
             continue;
         }
 
         const white=roster.players.find(p=>p.id===item.whiteId);
         const black=roster.players.find(p=>p.id===item.blackId);
 
-        if (item.result==="white_win" || item.result==="white_excused")
-            white.score+=1;
-
-        if (item.result==="black_win" || item.result==="black_excused")
-            black.score+=1;
-
-        if (item.result==="draw") {
-            white.score+=0.5;
-            black.score+=0.5;
-        }
-
-        // A forfeit awards zero points to the absent player
-        // and one point to the opponent.
-        if (item.result==="white_forfeit")
-            black.score+=1;
-
-        if (item.result==="black_forfeit")
-            white.score+=1;
+        if (item.result==="white_win") { white.wins++; black.losses++; }
+        if (item.result==="black_win") { black.wins++; white.losses++; }
+        if (item.result==="draw") { white.draws++; black.draws++; }
+        if (item.result==="white_excused") white.wins++;
+        if (item.result==="black_excused") black.wins++;
+        if (item.result==="white_forfeit") { black.wins++; white.losses++; }
+        if (item.result==="black_forfeit") { white.wins++; black.losses++; }
+        white.score=white.wins+0.5*white.draws;
+        black.score=black.wins+0.5*black.draws;
     }
 
     roster.history.push({
