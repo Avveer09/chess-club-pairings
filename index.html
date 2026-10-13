@@ -324,6 +324,34 @@ function initializeStats(roster) {
 }
 for (const name of ROSTER_NAMES) initializeStats(rosterData[name]);
 
+// One-time correction for previously recorded excused absences.
+// Old versions awarded the absent player 1 point but omitted the
+// present opponent's 1-point win. Do not apply the correction twice.
+function correctExistingExcusedResults(roster) {
+    if (roster.excusedOpponentPointsCorrected) return;
+    for (const round of roster.history) {
+        for (const result of round.results || []) {
+            const isWhiteExcused = ["white_excused", "white-excused"].includes(result.result);
+            const isBlackExcused = ["black_excused", "black-excused"].includes(result.result);
+            if (!isWhiteExcused && !isBlackExcused) continue;
+            const pair = (round.pairings || []).find(p =>
+                (result.whiteId && p.whiteId === result.whiteId && p.blackId === result.blackId) ||
+                (p.white === result.white && p.black === result.black)
+            );
+            const opponentId = isWhiteExcused
+                ? (result.blackId || pair?.blackId)
+                : (result.whiteId || pair?.whiteId);
+            const opponent = roster.players.find(p => p.id === opponentId);
+            if (opponent) {
+                opponent.wins += 1;
+                opponent.score = opponent.wins + 0.5 * opponent.draws + opponent.byes + opponent.excused;
+            }
+        }
+    }
+    roster.excusedOpponentPointsCorrected = true;
+}
+for (const name of ROSTER_NAMES) correctExistingExcusedResults(rosterData[name]);
+
 let activeRoster = localStorage.getItem("activeRoster") || "Dummy 1";
 if (!ROSTER_NAMES.includes(activeRoster)) activeRoster = "Dummy 1";
 
@@ -873,8 +901,8 @@ function recordResultsAndGenerate() {
         if (item.result==="white_win") { white.wins++; black.losses++; }
         if (item.result==="black_win") { black.wins++; white.losses++; }
         if (item.result==="draw") { white.draws++; black.draws++; }
-        if (item.result==="white_excused") white.excused++;
-        if (item.result==="black_excused") black.excused++;
+        if (item.result==="white_excused") { white.excused++; black.wins++; }
+        if (item.result==="black_excused") { black.excused++; white.wins++; }
         if (item.result==="white_forfeit") { black.wins++; white.losses++; }
         if (item.result==="black_forfeit") { white.wins++; black.losses++; }
         white.score=white.wins+0.5*white.draws+white.byes+white.excused;
