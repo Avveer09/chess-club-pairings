@@ -87,7 +87,7 @@ table{min-width:550px}
 
 <div id="site">
 <header><div class="header-inner">
-<div class="brand">♟ PCSS Chess Club Pairings</div>
+<div class="brand">♟ PCSS Chess Club Pairings</div><p class="muted" style="font-size:12px;margin:6px 0">Shared database connected after executive login. Avoid editing simultaneously on multiple devices.</p>
 <button class="small-button" style="float:right" onclick="logout()">Sign Out</button>
 <div class="active-roster">Active roster: <strong id="active-roster-name">Dummy 1</strong></div>
 <nav>
@@ -229,49 +229,34 @@ const defaultData = {
     "Roster 2":{players:[],pairings:[],history:[]}
 };
 
-let rosterData;
-try {
-    rosterData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(defaultData);
-} catch {
-    rosterData = structuredClone(defaultData);
-}
+// Shared data is loaded from Supabase after executive sign-in.
+let rosterData = {};
+let activeRoster = "Dummy 1";
+let sharedDataReady = false;
+let pendingSave = Promise.resolve();
 
-// Persist roster names separately so deleted rosters stay deleted.
-try {
-    const savedNames = JSON.parse(localStorage.getItem(ROSTER_LIST_KEY));
-    if (Array.isArray(savedNames) && savedNames.length &&
-        savedNames.every(n => typeof n === "string" && n.trim())) {
-        ROSTER_NAMES = [...new Set(savedNames)];
-    } else {
-        ROSTER_NAMES = [...new Set([...ROSTER_NAMES, ...Object.keys(rosterData)])];
+async function loadSharedData() {
+    const {data, error} = await getSupabaseClient()
+        .from("club_state").select("data").eq("id",1).single();
+    if (error) throw new Error("Cannot load shared chess data: " + error.message);
+    if (!data || !data.data || !Array.isArray(data.data.rosterNames))
+        throw new Error("Shared club data has not been initialized.");
+    const state = data.data;
+    ROSTER_NAMES = state.rosterNames;
+    rosterData = state.rosters || {};
+    if (!ROSTER_NAMES.length) throw new Error("No rosters were found.");
+    for (const name of ROSTER_NAMES) {
+        const roster = rosterData[name];
+        if (!roster) throw new Error("Roster missing: " + name);
+        if (!Array.isArray(roster.players)) roster.players = [];
+        if (!Array.isArray(roster.pairings)) roster.pairings = [];
+        if (!Array.isArray(roster.history)) roster.history = [];
+        initializeStats(roster);
+        correctExistingExcusedResults(roster);
     }
-} catch {
-    ROSTER_NAMES = [...new Set([...ROSTER_NAMES, ...Object.keys(rosterData)])];
-}
-
-for (const name of ROSTER_NAMES) {
-    if (!rosterData[name]) rosterData[name] = structuredClone(defaultData[name]);
-    const roster = rosterData[name];
-    if (!Array.isArray(roster.players)) roster.players = [];
-    if (!Array.isArray(roster.pairings)) roster.pairings = [];
-    if (!Array.isArray(roster.history)) roster.history = [];
-
-    roster.players = roster.players.map((p,i) => {
-        if (typeof p === "string") {
-            return {
-                id:name+"-"+i,
-                name:p,
-                elo:1200,
-                score:0,
-                lastColor:null
-            };
-        }
-        return {
-            ...p,
-            score:Number(p.score)||0,
-            lastColor:p.lastColor||null
-        };
-    });
+    activeRoster = ROSTER_NAMES.includes(state.activeRoster)
+        ? state.activeRoster : ROSTER_NAMES[0];
+    sharedDataReady = true;
 }
 
 // Upgrade saved statistics without double-counting old awarded points.
@@ -344,7 +329,7 @@ function initializeStats(roster) {
         player.score=player.wins+0.5*player.draws+player.byes+player.excused;
     }
 }
-for (const name of ROSTER_NAMES) initializeStats(rosterData[name]);
+
 
 // One-time correction for previously recorded excused absences.
 // Old versions awarded the absent player 1 point but omitted the
@@ -372,15 +357,27 @@ function correctExistingExcusedResults(roster) {
     }
     roster.excusedOpponentPointsCorrected = true;
 }
-for (const name of ROSTER_NAMES) correctExistingExcusedResults(rosterData[name]);
 
-let activeRoster = localStorage.getItem("activeRoster") || "Dummy 1";
-if (!ROSTER_NAMES.includes(activeRoster)) activeRoster = "Dummy 1";
 
+// Queue writes in order so rapid clicks cannot reverse save order.
 function saveData() {
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(rosterData));
-    localStorage.setItem("activeRoster",activeRoster);
-    localStorage.setItem(ROSTER_LIST_KEY,JSON.stringify(ROSTER_NAMES));
+    if (!sharedDataReady) return;
+    const snapshot = structuredClone({
+        rosterNames: ROSTER_NAMES,
+        rosters: rosterData,
+        activeRoster
+    });
+    pendingSave = pendingSave.catch(() => {}).then(async () => {
+        const {data, error} = await getSupabaseClient()
+            .from("club_state")
+            .update({data:snapshot, updated_at:new Date().toISOString()})
+            .eq("id",1).select("id");
+        if (error || !data || data.length !== 1) {
+            alert("Unable to save to Supabase. Please check your connection. " +
+                (error?.message || "Database update was not permitted."));
+            throw error || new Error("Shared save unsuccessful");
+        }
+    });
 }
 
 function getRoster() {
@@ -418,6 +415,7 @@ async function login() {
             password
         });
         if (authError) throw authError;
+        await loadSharedData();
         openSite();
     } catch (err) {
         error.textContent = err.message || "Sign-in failed.";
@@ -430,6 +428,7 @@ async function login() {
 async function logout() {
     try { await getSupabaseClient().auth.signOut(); }
     catch (err) { alert("Sign out failed: " + err.message); return; }
+    sharedDataReady = false;
     document.getElementById("site").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
 }
@@ -473,7 +472,7 @@ function deleteRoster(name) {
         return alert("You must keep at least one roster.");
     }
     const roster = rosterData[name];
-    const warning = `Delete ${name}?\n\nThis permanently removes ${roster.players.length} players, ${roster.history.length} completed rounds, and any current pairings from this browser.`;
+    const warning = `Delete ${name}?\n\nThis permanently removes ${roster.players.length} players, ${roster.history.length} completed rounds, and current pairings from the shared club database.`;
     if (!confirm(warning)) return;
     // A second confirmation reduces the risk of deleting tournament history.
     const typed = prompt(`To permanently delete this roster, type its exact name: ${name}`);
@@ -1063,7 +1062,7 @@ document.getElementById("new-roster-name").addEventListener("keydown",e=>{
     if (e.key === "Enter") addRoster();
 });
 
-saveData();
+// No local startup save: Supabase is the source of truth.
 </script>
 </body>
 </html>
