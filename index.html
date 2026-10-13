@@ -78,9 +78,9 @@ table{min-width:550px}
 <div class="login-box">
 <div class="logo">♟</div>
 <h1>PCSS Chess Club</h1>
-<p>Enter the admin password to continue.</p>
+<p>Executive Login — powered by Supabase</p>
 <input type="password" id="password" placeholder="Password" autocomplete="off">
-<button class="login-button" onclick="login()">Enter</button>
+<button class="login-button" id="login-button" onclick="login()">Sign In</button>
 <div id="login-error" class="login-error"></div>
 </div>
 </section>
@@ -88,6 +88,7 @@ table{min-width:550px}
 <div id="site">
 <header><div class="header-inner">
 <div class="brand">♟ PCSS Chess Club Pairings</div>
+<button class="small-button" style="float:right" onclick="logout()">Sign Out</button>
 <div class="active-roster">Active roster: <strong id="active-roster-name">Dummy 1</strong></div>
 <nav>
 <button id="nav-home" class="active" onclick="showPage('home',this)">Home</button>
@@ -180,10 +181,31 @@ Generate First Round
 </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
 
-const ADMIN_PASSWORD = "BISHOP1945";
+// Public client settings: fill these in after creating your Supabase login.
+// Use the PUBLISHABLE key (or legacy anon key), never a service_role key.
+const SUPABASE_URL = "https://efdqcbylhudbqyegutkq.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+const EXECUTIVE_EMAIL = "PASTE_YOUR_EMAIL_HERE";
+let supabaseClient = null;
+
+function getSupabaseClient() {
+    if (!window.supabase || !window.supabase.createClient) {
+        throw new Error("Supabase library did not load. Check your internet connection.");
+    }
+    if (SUPABASE_PUBLISHABLE_KEY.includes("PASTE_") || EXECUTIVE_EMAIL.includes("PASTE_")) {
+        throw new Error("Setup incomplete: add the executive email and Supabase publishable key in index.html.");
+    }
+    if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(
+            SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY
+        );
+    }
+    return supabaseClient;
+}
 let ROSTER_NAMES = ["Dummy 1", "Roster 1", "Roster 2"];
 const ROSTER_LIST_KEY = "chessClubRosterNames";
 const STORAGE_KEY = "chessClubData";
@@ -374,15 +396,42 @@ function escapeHtml(value) {
         .replaceAll("'","&#039;");
 }
 
-function login() {
-    const entered = document.getElementById("password").value;
-    if (entered !== ADMIN_PASSWORD) {
-        document.getElementById("login-error").textContent = "Incorrect password.";
-        return;
-    }
+function openSite() {
+    document.getElementById("password").value = "";
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("site").style.display = "block";
     updateEverything();
+}
+
+async function login() {
+    const error = document.getElementById("login-error");
+    const button = document.getElementById("login-button");
+    const password = document.getElementById("password").value;
+    if (!password) { error.textContent = "Enter the executive password."; return; }
+    error.textContent = "";
+    button.disabled = true;
+    button.textContent = "Signing in...";
+    try {
+        const client = getSupabaseClient();
+        const { error: authError } = await client.auth.signInWithPassword({
+            email: EXECUTIVE_EMAIL,
+            password
+        });
+        if (authError) throw authError;
+        openSite();
+    } catch (err) {
+        error.textContent = err.message || "Sign-in failed.";
+    } finally {
+        button.disabled = false;
+        button.textContent = "Sign In";
+    }
+}
+
+async function logout() {
+    try { await getSupabaseClient().auth.signOut(); }
+    catch (err) { alert("Sign out failed: " + err.message); return; }
+    document.getElementById("site").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
 }
 
 function showPage(pageId,button) {
