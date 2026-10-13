@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,6 +35,8 @@ main{padding-top:35px}
 .card{background:white;border:1px solid #d1d5db;border-radius:9px;padding:20px;margin-bottom:20px}
 .card h3{margin-top:0}
 .roster-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.roster-create-form{display:flex;gap:10px}
+.roster-create-form input{flex:1;min-width:0;padding:11px;border:1px solid #cbd5e1;border-radius:6px}
 .roster-button{background:white;border:2px solid #d1d5db;border-radius:8px;padding:16px;text-align:left;color:#374151}
 .roster-button.selected{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
 .roster-name{display:block;font-size:17px;font-weight:bold}
@@ -63,6 +64,7 @@ tr:last-child td{border-bottom:0}
 .warning{background:#fff7ed;border:1px solid #fed7aa}
 @media(max-width:700px){
 .roster-selector,.add-player-form{grid-template-columns:1fr}
+.roster-create-form{flex-direction:column}
 nav button{flex:1;padding:10px 5px}
 table{min-width:550px}
 }
@@ -150,10 +152,18 @@ Generate First Round
 <h2>Rosters</h2>
 <p>Select which roster you want to use.</p>
 </div>
+<div class="card">
+<h3>Create Roster</h3>
+<div class="roster-create-form">
+<input id="new-roster-name" maxlength="70" placeholder="New roster name">
+<button class="primary-button" onclick="addRoster()">Add Roster</button>
+</div>
+</div>
 <div id="roster-selector" class="roster-selector"></div>
 <div class="card">
 <h3 id="roster-details-name"></h3>
 <p id="roster-details-count"></p>
+<button class="small-button delete-button" onclick="deleteRoster(activeRoster)">Delete Selected Roster</button>
 </div>
 </section>
 
@@ -171,7 +181,8 @@ Generate First Round
 "use strict";
 
 const ADMIN_PASSWORD = "BISHOP1945";
-const ROSTER_NAMES = ["Dummy 1", "Roster 1", "Roster 2"];
+let ROSTER_NAMES = ["Dummy 1", "Roster 1", "Roster 2"];
+const ROSTER_LIST_KEY = "chessClubRosterNames";
 const STORAGE_KEY = "chessClubData";
 
 const defaultData = {
@@ -198,6 +209,19 @@ try {
     rosterData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(defaultData);
 } catch {
     rosterData = structuredClone(defaultData);
+}
+
+// Persist roster names separately so deleted rosters stay deleted.
+try {
+    const savedNames = JSON.parse(localStorage.getItem(ROSTER_LIST_KEY));
+    if (Array.isArray(savedNames) && savedNames.length &&
+        savedNames.every(n => typeof n === "string" && n.trim())) {
+        ROSTER_NAMES = [...new Set(savedNames)];
+    } else {
+        ROSTER_NAMES = [...new Set([...ROSTER_NAMES, ...Object.keys(rosterData)])];
+    }
+} catch {
+    ROSTER_NAMES = [...new Set([...ROSTER_NAMES, ...Object.keys(rosterData)])];
 }
 
 for (const name of ROSTER_NAMES) {
@@ -231,6 +255,7 @@ if (!ROSTER_NAMES.includes(activeRoster)) activeRoster = "Dummy 1";
 function saveData() {
     localStorage.setItem(STORAGE_KEY,JSON.stringify(rosterData));
     localStorage.setItem("activeRoster",activeRoster);
+    localStorage.setItem(ROSTER_LIST_KEY,JSON.stringify(ROSTER_NAMES));
 }
 
 function getRoster() {
@@ -268,6 +293,42 @@ function showPage(pageId,button) {
 function selectRoster(name) {
     if (!ROSTER_NAMES.includes(name)) return;
     activeRoster = name;
+    saveData();
+    updateEverything();
+}
+
+function addRoster() {
+    const input = document.getElementById("new-roster-name");
+    const name = input.value.trim();
+    if (!name) return alert("Enter a roster name.");
+    if (ROSTER_NAMES.some(existing => existing.toLowerCase() === name.toLowerCase())) {
+        return alert("A roster with this name already exists.");
+    }
+    if (name === "__proto__" || name === "constructor" || name === "prototype") {
+        return alert("Choose a different roster name.");
+    }
+    rosterData[name] = {players:[],pairings:[],history:[]};
+    ROSTER_NAMES.push(name);
+    activeRoster = name;
+    input.value = "";
+    saveData();
+    updateEverything();
+}
+
+function deleteRoster(name) {
+    if (!ROSTER_NAMES.includes(name)) return;
+    if (ROSTER_NAMES.length === 1) {
+        return alert("You must keep at least one roster.");
+    }
+    const roster = rosterData[name];
+    const warning = `Delete ${name}?\n\nThis permanently removes ${roster.players.length} players, ${roster.history.length} completed rounds, and any current pairings from this browser.`;
+    if (!confirm(warning)) return;
+    // A second confirmation reduces the risk of deleting tournament history.
+    const typed = prompt(`To permanently delete this roster, type its exact name: ${name}`);
+    if (typed !== name) return alert("Deletion cancelled.");
+    delete rosterData[name];
+    ROSTER_NAMES = ROSTER_NAMES.filter(n => n !== name);
+    if (activeRoster === name) activeRoster = ROSTER_NAMES[0];
     saveData();
     updateEverything();
 }
@@ -826,6 +887,10 @@ for (const id of ["new-player-name","new-player-elo"]) {
         if (e.key==="Enter") addPlayer();
     });
 }
+
+document.getElementById("new-roster-name").addEventListener("keydown",e=>{
+    if (e.key === "Enter") addRoster();
+});
 
 saveData();
 </script>
