@@ -131,11 +131,11 @@ table{min-width:550px}
 </div>
 <div class="card">
 <h3>Players</h3>
-<p>Edit a player's name, Elo, wins, losses, or draws directly. Points update automatically: <strong>Wins + 0.5 × Draws</strong>.</p>
-<p class="muted">Wins include awarded full points for byes, excused absences, and opponent forfeits. Manual changes do not rewrite completed round history.</p>
+<p>Edit names, Elo, wins, losses, and draws. BYEs and excused absences are shown separately from wins.</p>
+<p class="muted">Points = Wins + 0.5 × Draws + BYEs + Excused Absences. BYEs and excused absences come from recorded rounds; manual statistics edits do not rewrite History.</p>
 <div class="table-container">
 <table>
-<thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Wins</th><th>Losses</th><th>Draws</th><th>Points</th><th>Actions</th></tr></thead>
+<thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Wins</th><th>Losses</th><th>Draws</th><th>BYEs</th><th>Excused</th><th>Points</th><th>Actions</th></tr></thead>
 <tbody id="players-body"></tbody>
 </table>
 </div>
@@ -252,47 +252,74 @@ for (const name of ROSTER_NAMES) {
     });
 }
 
-// Upgrade old localStorage records to editable W/L/D statistics.
-// Preserve existing points, including old awarded-by-bye points.
+// Upgrade saved statistics without double-counting old awarded points.
+// Earlier versions stored BYEs and excused absences inside "wins".
 function initializeStats(roster) {
-    const historical = new Map(roster.players.map(p => [p.id,{wins:0,losses:0,draws:0}]));
-    const add = (id,stat) => { const x=historical.get(id); if(x) x[stat]++; };
+    const historyTotals = new Map(roster.players.map(p => [p.id, {
+        wins:0, losses:0, draws:0, byes:0, excused:0
+    }]));
+    const add = (id,field) => {
+        const record=historyTotals.get(id);
+        if (record) record[field]++;
+    };
     for (const round of roster.history) {
         for (const r of round.results || []) {
-            if (r.type === "bye") { add(r.byeId || (round.pairings || []).find(p=>p.bye===r.player)?.byeId,"wins"); continue; }
+            if (r.type === "bye") {
+                const id=r.byeId || (round.pairings||[]).find(p=>p.bye===r.player)?.byeId;
+                add(id,"byes");
+                continue;
+            }
             const pair=(round.pairings||[]).find(p=>p.whiteId===r.whiteId && p.blackId===r.blackId) ||
                 (round.pairings||[]).find(p=>p.white===r.white && p.black===r.black);
             const white=r.whiteId || pair?.whiteId;
             const black=r.blackId || pair?.blackId;
-            switch (r.result) {
+            switch(r.result) {
                 case "white_win": case "white-win": add(white,"wins"); add(black,"losses"); break;
                 case "black_win": case "black-win": add(black,"wins"); add(white,"losses"); break;
                 case "draw": add(white,"draws"); add(black,"draws"); break;
                 case "white_forfeit": case "white-forfeit": add(black,"wins"); add(white,"losses"); break;
                 case "black_forfeit": case "black-forfeit": add(white,"wins"); add(black,"losses"); break;
-                case "white_excused": case "white-excused": add(white,"wins"); break;
-                case "black_excused": case "black-excused": add(black,"wins"); break;
+                case "white_excused": case "white-excused": add(white,"excused"); break;
+                case "black_excused": case "black-excused": add(black,"excused"); break;
             }
         }
     }
-    for (const p of roster.players) {
-        if ([p.wins,p.losses,p.draws].every(n=>Number.isInteger(n)&&n>=0)) {
-            p.score=p.wins+0.5*p.draws;
-            continue;
+    for (const player of roster.players) {
+        const t=historyTotals.get(player.id);
+        const oldScore=Number(player.score)||0;
+        const oldStatsValid=[player.wins,player.losses,player.draws].every(
+            n=>Number.isSafeInteger(n) && n>=0
+        );
+        // Only migrate once. Existing explicit BYEs/Excused are retained.
+        if (!Number.isSafeInteger(player.byes) || !Number.isSafeInteger(player.excused) ||
+            player.byes<0 || player.excused<0) {
+            player.byes=t.byes;
+            player.excused=t.excused;
+            if (oldStatsValid) {
+                // Previous builds treated awarded points as wins.
+                const awards=t.byes+t.excused;
+                const oldWins=player.wins;
+                player.wins=Math.max(0,oldWins-awards);
+                // Retain preexisting points in edge cases with manual edits.
+                const newScore=player.wins+0.5*player.draws+awards;
+                if (newScore < oldScore && awards>oldWins) {
+                    player.wins+=Math.floor(oldScore-newScore);
+                }
+            } else {
+                const historicalPoints=t.wins+0.5*t.draws+t.byes+t.excused;
+                if (Math.abs(oldScore-historicalPoints)<0.001) {
+                    player.wins=t.wins;
+                    player.draws=t.draws;
+                } else {
+                    // Preserve previous totals when older rounds are unavailable.
+                    const gamePoints=Math.max(0,oldScore-t.byes-t.excused);
+                    player.wins=Math.floor(gamePoints);
+                    player.draws=Math.round((gamePoints-player.wins)*2);
+                }
+                player.losses=t.losses;
+            }
         }
-        const totals=historical.get(p.id);
-        const previous=Number(p.score)||0;
-        const historicPoints=totals.wins+0.5*totals.draws;
-        if (Math.abs(previous-historicPoints)<0.001) {
-            p.wins=totals.wins;
-            p.draws=totals.draws;
-        } else {
-            // Preserve legacy standings if historical results were edited or unavailable.
-            p.wins=Math.floor(previous);
-            p.draws=Math.round((previous-p.wins)*2);
-        }
-        p.losses=totals.losses;
-        p.score=p.wins+0.5*p.draws;
+        player.score=player.wins+0.5*player.draws+player.byes+player.excused;
     }
 }
 for (const name of ROSTER_NAMES) initializeStats(rosterData[name]);
@@ -409,7 +436,7 @@ function renderPlayers() {
     body.innerHTML="";
     const players=getRoster().players;
     if (!players.length) {
-        body.innerHTML='<tr><td colspan="8" class="empty-state">No players added yet.</td></tr>';
+        body.innerHTML='<tr><td colspan="10" class="empty-state">No players added yet.</td></tr>';
         return;
     }
     getRankedPlayers().forEach((player,index)=>{
@@ -421,6 +448,8 @@ function renderPlayers() {
             <td><input class="inline-edit stat-edit player-wins-edit" type="number" min="0" step="1"></td>
             <td><input class="inline-edit stat-edit player-losses-edit" type="number" min="0" step="1"></td>
             <td><input class="inline-edit stat-edit player-draws-edit" type="number" min="0" step="1"></td>
+            <td>${player.byes}</td>
+            <td>${player.excused}</td>
             <td class="points-cell">${player.score}</td>
             <td><button class="small-button delete-button">Remove</button></td>`;
         const nameInput=row.querySelector(".player-name-edit");
@@ -449,7 +478,7 @@ function updatePlayerStat(id,stat,value) {
         return;
     }
     player[stat]=number;
-    player.score=player.wins+0.5*player.draws;
+    player.score=player.wins+0.5*player.draws+player.byes+player.excused;
     saveData();
     updateEverything();
 }
@@ -472,6 +501,8 @@ function addPlayer() {
         wins:0,
         losses:0,
         draws:0,
+        byes:0,
+        excused:0,
         lastColor:null
     });
 
@@ -832,7 +863,7 @@ function recordResultsAndGenerate() {
     for (const item of results) {
         if (item.type==="bye") {
             const player=roster.players.find(p=>p.id===item.byeId);
-            if (player) { player.wins+=1; player.score=player.wins+0.5*player.draws; }
+            if (player) { player.byes+=1; player.score=player.wins+0.5*player.draws+player.byes+player.excused; }
             continue;
         }
 
@@ -842,12 +873,12 @@ function recordResultsAndGenerate() {
         if (item.result==="white_win") { white.wins++; black.losses++; }
         if (item.result==="black_win") { black.wins++; white.losses++; }
         if (item.result==="draw") { white.draws++; black.draws++; }
-        if (item.result==="white_excused") white.wins++;
-        if (item.result==="black_excused") black.wins++;
+        if (item.result==="white_excused") white.excused++;
+        if (item.result==="black_excused") black.excused++;
         if (item.result==="white_forfeit") { black.wins++; white.losses++; }
         if (item.result==="black_forfeit") { white.wins++; black.losses++; }
-        white.score=white.wins+0.5*white.draws;
-        black.score=black.wins+0.5*black.draws;
+        white.score=white.wins+0.5*white.draws+white.byes+white.excused;
+        black.score=black.wins+0.5*black.draws+black.byes+black.excused;
     }
 
     roster.history.push({
